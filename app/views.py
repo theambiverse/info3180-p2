@@ -9,7 +9,7 @@ from app import app, db
 from flask import render_template, request, redirect, url_for, send_from_directory, flash
 #from app.propertyform import Propertyform
 from werkzeug.utils import secure_filename
-#from app.models import Properties
+from app.models import Favourites, Cars, Users
 import psycopg2
 
 from sqlalchemy import create_engine
@@ -17,21 +17,20 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 ###
 # Routing for your application.
-###
+###  
 
-@app.route('/')
+@app.route('/') 
 def home():
     """Render website's home page."""
-    return render_template('home.html')
+    return app.send_static_file('index.html')
 
+#@app.route('/about/')
+#def about():
+    #"""Render the website's about page."""
+    #return render_template('about.html', name="Mary Jane")
+"""
 
-@app.route('/about/')
-def about():
-    """Render the website's about page."""
-    return render_template('about.html', name="Mary Jane")
-
-
-"""@app.route('/property', methods=['POST', 'GET'])
+@app.route('/property', methods=['POST', 'GET'])
 def property():
     form=Propertyform()
     
