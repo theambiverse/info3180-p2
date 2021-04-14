@@ -1,6 +1,7 @@
 from . import db
 
 #db.create_all()
+from datetime import datetime
 from werkzeug.security import generate_password_hash
 
 class Cars(db.Model): #one-to-one
@@ -18,9 +19,10 @@ class Cars(db.Model): #one-to-one
     year=db.Column(db.String(80))
     transmission=db.Column(db.String(80))
     car_type=db.Column(db.String(80))
-    price=db.Column(db.Decimal(10,2))
+    price=db.Column(db.Float)
     photo=db.Column(db.String(80))
-    user_id=db.Column(db.Integer(80))#, db.ForeignKey('user.id'))
+    user_id=db.Column(db.Integer, db.ForeignKey('users.id'))
+    favourites=db.relationship('Favourites', backref='cars')
 
 
 
@@ -62,8 +64,8 @@ class Favourites(db.Model): #
     __tablename__ = 'favourites'
 
     id = db.Column(db.Integer, primary_key=True)
-    car_id = db.Column(db.Integer, )
-    user_id = db.Column(db.Integer)
+    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     
     
@@ -112,12 +114,14 @@ class Users(db.Model):
     location = db.Column(db.String(80))
     biography = db.Column(db.String(255))
     photo = db.Column(db.String(80))
-    date_joined = db.Column(db.DateTime())#, default=datetime.utcnow)
-    #cars=db.relationship('Cars', backref='users')
+    date_joined = db.Column(db.DateTime(), default=datetime.utcnow)
+    cars=db.relationship('Cars', backref='users')
+    favourites=db.relationship('Favourites', backref='users')
+    
     
     
 
-     def __init__(self, name, username, password):
+    def __init__(self, name, username, password, email,location,biography,photo,date_joined,):
         self.email=email
         self.location=location
         self.biography=biography

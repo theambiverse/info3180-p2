@@ -5,7 +5,7 @@ from flask_migrate import Migrate, MigrateCommand
 
 from app import app # we import the app object from the app module
 from app import db
-from app.models import Properties
+from app.models import Cars, Favourites, Users
 
 migrate = Migrate(app, db)
 manager = Manager(app)

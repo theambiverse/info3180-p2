@@ -7,9 +7,9 @@ This file creates your application.
 import os
 from app import app, db
 from flask import render_template, request, redirect, url_for, send_from_directory, flash
-from app.propertyform import Propertyform
+#from app.propertyform import Propertyform
 from werkzeug.utils import secure_filename
-from app.models import Properties
+#from app.models import Properties
 import psycopg2
 
 from sqlalchemy import create_engine
@@ -31,7 +31,7 @@ def about():
     return render_template('about.html', name="Mary Jane")
 
 
-@app.route('/property', methods=['POST', 'GET'])
+"""@app.route('/property', methods=['POST', 'GET'])
 def property():
     form=Propertyform()
     
@@ -116,7 +116,7 @@ def viewproperty(propertyid):
     return render_template('property.html', prop=l)
 
 
-
+"""
 
 ###
 # The functions below should be applicable to all Flask apps.
