@@ -195,9 +195,6 @@ def searchCar():
     return jsonify(data = error)
 
 
-        
-
-
 #needs to be tested with frontend route
 @app.route('/api/cars', methods=['POST'])
 @requires_auth
@@ -236,7 +233,7 @@ def newcar():
 @app.route('/api/users/<user_id>',methods=['GET'])
 @requires_auth
 def userDetail(user_id):
-    user_id=g.current_user["id"]
+    ###user_id=g.current_user["id"]
     if request.method == 'GET':
         user = Users.query.filter_by(id=user_id).first()
         #results = db.session.execute('select * from car where user.user_id like :userid' , {'userid': user_id}).all()
@@ -247,54 +244,28 @@ def userDetail(user_id):
 
             return jsonify({"error": "User not Found!"})
         
-#not sure how to handle this one
-@app.route('/api/users/<userid>/favourite', methods=["POST"])
+#needs to be tested with frontend route
+@app.route('/api/cars/<car_id>/favourite', methods=["POST"])
 @requires_auth
-def addFavorite(userid):
-    userid=g.current_user["id"]
-    if request.is_json:
-        data = request.get_json(force=True)
-        faveCar = Cars(userid, data["id"], data["description"], data["make"], data["model"],
-                    data["colour"], data["year"], data["transmission"], data["car_type"], data["price"], data["photo"])
-                                
-        db.session.add(faveCar)
-        db.session.commit()
+def addFavorite(car_id):
 
-        result = {"error": "null",
-                  "data": {
-                      "car":{
-                          "id": faveCar.id,
-                          "description": faveCar.description,
-                          "make": faveCar.make,
-                          "model": faveCar.model,
-                          "colour": faveCar.colour,
-                          "year": faveCar.year,
-                          "transmission": faveCar.transmission,
-                          "car_type": faveCar.car_type,
-                          "price": faveCar.price,
-                          "photo": faveCar.photo,
+    faveCar=Favourites(car_id=car_id, user_id=g.current_user["id"])    
+    db.session.add(faveCar)
+    db.session.commit()
 
-                      }
-                  }, 
-                  "message":"Success"}
-        flash('Favorite car added successfully', 'success')
-        print ("Success")
-    else:
-        result = {"error": "true", "data": {}, "message": "Unable add car"}
-        print ("failed")
-    print ("returning")
+    result = {"id": faveCar.id,"description": faveCar.description,"make": faveCar.make,"model": faveCar.model,"colour": faveCar.colour,"year": faveCar.year,"transmission": faveCar.transmission,"car_type": faveCar.car_type,"price": faveCar.price,"photo": faveCar.photo,}
     return jsonify(result)
 
 #needs to be tested with frontend route
-@app.route('/api/users/<userid>/favourites', methods=["GET"])
+@app.route('/api/users/<user_id>/favourites', methods=["GET"])
 @requires_auth
-def userFavourite(userid):
-    """Returns JSON data for a user's wishlist"""
+def userFavourite(user_id):
+    """Returns JSON data for a user's fav"""
     fav_car=[]
-    userid=g.current_user["id"]
+    #userid=g.current_user["id"]
     #favorite = {"error": "null","data": {"cars":[]},"message":"Success"}
 
-    favlist = Favourites.query.filter_by(user_id=userid).all()
+    favlist = Favourites.query.filter_by(user_id=user-id).all()
     for car in favlist:
         carid = car.car_id
         car = Cars.query.filter_by(car_id=carid).first()

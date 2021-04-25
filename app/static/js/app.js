@@ -63,7 +63,7 @@ const login = {
                         localStorage.setItem('current_user', id);
                         router.push('/explore');
                         //this.$alert(jsonResponse.data.message);
-                        swal({title: "Login",text: jsonResponse.data.message,icon: "success",button: "OK!"});
+                        //Yswal({title: "Login",text: jsonResponse.data.message,icon: "success",button: "OK!"});
                     }
                 }else{
                     //this.$alert(jsonResponse.data.message, " try again");
