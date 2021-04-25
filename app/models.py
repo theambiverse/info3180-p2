@@ -12,40 +12,32 @@ class Cars(db.Model): #one-to-one
     __tablename__ = 'cars'
 
     id = db.Column(db.Integer, primary_key=True)
-    description=db.Column(db.String(255))
-    make=db.Column(db.String(80))
-    model=db.Column(db.String(80))
-    colour=db.Column(db.String(80))
-    year=db.Column(db.String(80))
-    transmission=db.Column(db.String(80))
-    car_type=db.Column(db.String(80))
+    description=db.Column(db.String(2000))
+    make=db.Column(db.String(100))
+    model=db.Column(db.String(100))
+    colour=db.Column(db.String(100))
+    year=db.Column(db.String(100))
+    transmission=db.Column(db.String(100))
+    car_type=db.Column(db.String(100))
     price=db.Column(db.Float)
-    photo=db.Column(db.String(80))
-    user_id=db.Column(db.Integer, db.ForeignKey('users.id'))
-    favourites=db.relationship('Favourites', backref='cars')
+    photo=db.Column(db.String(100))
+    user_id=db.Column(db.Integer)#, db.ForeignKey('users.id'))
+    #favourites=db.relationship('Favourites', backref='cars')
+
+    def __init__(self,description,make,model,colour,year,transmission,car_type,price,photo,userid):
+        self.description = description
+        self.make = make
+        self.model = model
+        self.colour = colour
+        self.year = year
+        self.transmission = transmission
+        self.car_type = car_type
+        self.price = price
+        self.photo = photo
+        self.userid= userid
 
 
 
-    
-
-    #def __init__(self, title,desc,bedroom,bathroom,price,location,propertytype,photoname):
-    #   self.title = title
-     #   self.desc=desc
-      #  self.bedroom=bedroom
-       # self.bathroom=bathroom
-        #self.price=price
-      #  self.location=location
-       # self.propertytype=propertytype
-        #self.photoname=photoname
-
-    def is_authenticated(self):
-        return True
-
-    def is_active(self):
-        return True
-
-    def is_anonymous(self):
-        return False
 
     def get_id(self):
         try:
@@ -64,31 +56,15 @@ class Favourites(db.Model): #
     __tablename__ = 'favourites'
 
     id = db.Column(db.Integer, primary_key=True)
-    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    car_id = db.Column(db.Integer)#, db.ForeignKey('cars.id'))
+    user_id = db.Column(db.Integer)#, db.ForeignKey('users.id'))
 
     
     
-    
+    def __init__(self,car_id,user_id):
+        self.car_id = car_id
+        self.user_id = user_id
 
-    #def __init__(self, title,desc,bedroom,bathroom,price,location,propertytype,photoname):
-    #   self.title = title
-     #   self.desc=desc
-      #  self.bedroom=bedroom
-       # self.bathroom=bathroom
-        #self.price=price
-      #  self.location=location
-       # self.propertytype=propertytype
-        #self.photoname=photoname
-
-    def is_authenticated(self):
-        return True
-
-    def is_active(self):
-        return True
-
-    def is_anonymous(self):
-        return False
 
     def get_id(self):
         try:
@@ -107,16 +83,16 @@ class Users(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80))
-    password = db.Column(db.String(80))
-    name = db.Column(db.String(80))
-    email = db.Column(db.String(80))
-    location = db.Column(db.String(80))
-    biography = db.Column(db.String(255))
-    photo = db.Column(db.String(80))
-    date_joined = db.Column(db.DateTime(), default=datetime.utcnow)
-    cars=db.relationship('Cars', backref='users')
-    favourites=db.relationship('Favourites', backref='users')
+    username = db.Column(db.String(200))
+    password = db.Column(db.String(300))
+    name = db.Column(db.String(100))
+    email = db.Column(db.String(100))
+    location = db.Column(db.String(255))
+    biography = db.Column(db.String(2500))
+    photo = db.Column(db.String(100))
+    date_joined = db.Column(db.DateTime())#, default=datetime.utcnow)
+   # cars=db.relationship('Cars', backref='users')
+    #favourites=db.relationship('Favourites', backref='users')
     
     
     

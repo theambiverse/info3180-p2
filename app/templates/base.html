@@ -8,28 +8,20 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Flask Starter App</title>
+    <title>United Auto Sales</title>
 
     <!-- Bootstrap -->
+    <script>const token = "{{ csrf_token() }}";</script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     {% block css %} {% endblock%}
   </head>
   <body>
-    <header>
-        {% include "header.html" %}
-    </header>
-    <main>
-        <div class="container">
-            {% block main %}{% endblock %}
-        </div>
-    </main>
-    <footer>
-        <div class="container">
-            {% include "footer.html" %}
-        </div>
-    </footer>
+    <div id="main">
+        {% block main %}{% endblock %}
+    </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -38,6 +30,7 @@
     <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
     <script src="{{ url_for('static', filename='js/vue-router.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    
     {% block js %} {% endblock%}
   </body>
 </html>

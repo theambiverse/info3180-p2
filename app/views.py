@@ -5,114 +5,150 @@ Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
 This file creates your application.
 """
 import os
-from app import app, db
-from flask import render_template, request, redirect, url_for, send_from_directory, flash
-#from app.propertyform import Propertyform
+from app import app, db, login_manager, csrf
+from flask import render_template, request, redirect, url_for, flash, g, jsonify
+from flask_login import login_user, logout_user, current_user, login_required
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
-from app.models import Favourites, Cars, Users
-import psycopg2
+from app.userforms import RegisterForm, LoginForm
+from app.models import Users, Cars, Favourites
+import datetime
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+#from sqlalchemy import create_engine
+#from sqlalchemy.orm import scoped_session, sessionmaker
+
+import jwt
+from flask import _request_ctx_stack
+from functools import wraps
+def requires_auth(f):
+  @wraps(f)
+  def decorated(*args, **kwargs):
+    auth = request.headers.get('Authorization', None) # or request.cookies.get('token', None)
+
+    if not auth:
+      return jsonify({'code': 'authorization_header_missing', 'description': 'Authorization header is expected'}), 401
+
+    parts = auth.split()
+
+    if parts[0].lower() != 'bearer':
+      return jsonify({'code': 'invalid_header', 'description': 'Authorization header must start with Bearer'}), 401
+    elif len(parts) == 1:
+      return jsonify({'code': 'invalid_header', 'description': 'Token not found'}), 401
+    elif len(parts) > 2:
+      return jsonify({'code': 'invalid_header', 'description': 'Authorization header must be Bearer + \s + token'}), 401
+
+    token = parts[1]
+    try:
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'code': 'token_expired', 'description': 'token is expired'}), 401
+    except jwt.DecodeError:
+        return jsonify({'code': 'token_invalid_signature', 'description': 'Token signature is invalid'}), 401
+
+    g.current_user = user = payload
+    return f(*args, **kwargs)
+
+  return decorated
 
 ###
 # Routing for your application.
 ###  
 
-@app.route('/') 
-def home():
-    """Render website's home page."""
-    return app.send_static_file('index.html')
+#@app.route('/') 
+#def home():
+ #   """Render website's home page."""
+  #  return app.send_static_file('index.html')
 
-#@app.route('/about/')
-#def about():
-    #"""Render the website's about page."""
-    #return render_template('about.html', name="Mary Jane")
+
+@app.route('/api/register', methods=['POST'])
+def register():
+
+    form=RegisterForm()
+    error=[]
+
+    if request.method == 'POST':
+        if form.validate_on_submit():
+
+            username = form.username.data
+            password = form.password.data
+            name = form.name.data
+            email = form.email.data
+            location = form.location.data
+            biography = form.biography.data
+            photo = form.photo.data
+            filename = secure_filename(photo.filename)
+            date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            #existing email and user error handling 
+            checkname = Users.query.filter_by(username=username).first()
+            checkemail = Users.query.filter_by(email=email).first()
+            if checkname is None:
+                if checkemail is None:
+                    
+                    photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    nuser = Users(username=username, password=password, name=name, email=email,
+                                    location=location, biography=biography, photo=filename, date_joined=date)
+                    
+                    db.session.add(nuser)
+                    db.session.commit()
+
+                    flash('User successfully registered.', 'success')
+
+                    user = Users.query.filter_by(username=username).first()
+
+                    userdata = [{
+                        'id': user.id,'username': username,'name': name,'photo': filename,'email': email,'location': location,'biography': biography,'date_joined': date
+                    }]
+                    return jsonify(data=userdata)
+                else:
+                    error.append("Email is already taken")
+            else:
+                error.append('Username is already taken')
+        er=formerrors(form).append(error)
+        return jsonify(errors= er)
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+
+    form=LoginForm()
+    error=[]
+
+    if request.method == 'POST':
+        if form.validate_on_submit():
+
+            username = form.username.data
+            password = form.password.data
+            
+            user = Users.query.filter_by(username=username).first()
+
+            if user is not None and check_password_hash(user.password, password):
+                payload = {
+                    'id': user.id,
+                    'username': user.username,
+                    'iat': datetime.datetime.now(datetime.timezone.utc),
+                    'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=45)
+                }
+
+                token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+
+                return jsonify(data={'message': 'Login was successful!', 'token': token, 'id': user.id})
+            else:
+                error.append('Username or Password is incorrect!')
+        er=formerrors(form).append(error)
+        return jsonify(errors= er)
+
+
+
+
+@app.route('/api/auth/logout', methods=['POST'])
+@requires_auth 
+def logout():
+    return jsonify(data={'message': 'Logout was successful!'})
+
 """
 
-@app.route('/property', methods=['POST', 'GET'])
-def property():
-    form=Propertyform()
-    
-    if request.method == 'POST': 
-        if form.validate_on_submit:
-            photo=form.photo.data
-            filename=secure_filename(photo.filename)
-            photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-            datab=Properties()
-
-            datab.title=form.title.data
-            datab.desc=form.desc.data
-            datab.bedroom=form.bedroom.data
-            datab.bathroom=form.bathroom.data
-            datab.price=form.price.data
-            datab.location=form.location.data
-            datab.propertytype=form.select.data
-            datab.photoname=filename
-           
-            db.session.add(datab)
-            db.session.commit()
-        
-            flash('Property Added', 'success')
-            return redirect(url_for('properties'))
-
-    return render_template('propertyform.html', form=form)
-
-def getprop():
-    prop=Properties.query.all()
-    results=[{
-        "photo":p.photoname,
-        "title":p.title,
-        "location":p.location,
-        "price":p.price,
-        "id":p.id,
-        "bedroom":p.bedroom,
-        "bathroom":p.bathroom,
-        "propertytype":p.propertytype,
-        "desc":p.desc
-        
-        
-    } for p in prop]
-    return results
-
-#def connect_db():
-#    return psycopg2.connect(app.config['SQLALCHEMY_DATABASE_URI'])
-
-@app.route('/properties')
-def properties():
-    prop=getprop()
-
-    
-    return render_template('properties.html',prop=prop )
-
-
-@app.route('/properties/<ph>')
-def get_image(ph):
-
-    root_dir=os.getcwd()
-
-    return send_from_directory(os.path.join(root_dir, app.config['UPLOAD_FOLDER']), ph)
-
-
-def get_uploaded_images():
-    rootdir=os.getcwd()
-    path=rootdir+ '/uploads' 
-    file_list = [] 
-
-    for subdir, dirs, files in os.walk(path):
-        for name in files:
-            if name.endswith(('.png','.PNG', '.jpg','.JPG', '.jpeg','JPEG')):
-                file_list.append(name)
-
-    return file_list
-
-
-@app.route('/property/<propertyid>')
-def viewproperty(propertyid):
-    prop=getprop()
-    l=[prop,propertyid]
-    return render_template('property.html', prop=l)
 
 
 """
@@ -120,6 +156,25 @@ def viewproperty(propertyid):
 ###
 # The functions below should be applicable to all Flask apps.
 ###
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def index(path):
+    """
+    Because we use HTML5 history mode in vue-router we need to configure our
+    web server to redirect all routes to index.html. Hence the additional route
+    "/<path:path".
+
+    Also we will render the initial webpage and then let VueJS take control.
+    """
+    return render_template('index.html')
+
+
+
+
+@login_manager.user_loader
+def load_user(id):
+    return UserProfile.query.get(int(id))
+
 
 # Display Flask WTF errors as Flash messages
 def flash_errors(form):
@@ -136,6 +191,18 @@ def send_text_file(file_name):
     file_dot_text = file_name + '.txt'
     return app.send_static_file(file_dot_text)
 
+def formerrors(form):
+    error_messages = []
+    """Collects form errors"""
+    for field, errors in form.errors.items():
+        for error in errors:
+            message = u"Error in the %s field - %s" % (
+                    getattr(form, field).label.text,
+                    error
+                )
+            error_messages.append(message)
+
+    return error_messages
 
 @app.after_request
 def add_header(response):
