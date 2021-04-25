@@ -10,7 +10,7 @@ from flask import render_template, request, redirect, url_for, flash, g, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
-from app.userforms import RegisterForm, LoginForm
+from app.userforms import RegisterForm, LoginForm, AddNewCarForm, SearchForm
 from app.models import Users, Cars, Favourites
 import datetime
 
@@ -98,7 +98,7 @@ def register():
                     user = Users.query.filter_by(username=username).first()
 
                     userdata = [{
-                        'id': user.id,'username': username,'name': name,'photo': filename,'email': email,'location': location,'biography': biography,'date_joined': date}]
+                        'id': user.id,'username':user.username,'name': user.name,'photo': user.photo,'email': user.email,'location': user.location,'biography': user.biography,'date_joined': user.date}]
                     return jsonify(data=userdata)
                 else:
                     error.append("Email is already taken")
@@ -138,6 +138,190 @@ def login():
 @requires_auth 
 def logout():
     return jsonify(data={'message': 'Logout was successful!'})
+
+
+
+
+"""
+## from nat
+@app.route ('/api/cars', methods=['POST','GET'])
+def addnewcar():
+    form = AddNewCarForm()
+    db = connect_db()
+    cur = db.cursor()
+    if request.method == 'POST': 
+        if form.validate_on_submit:
+            #save image it uploads folder
+            car_img=form.photo.data
+            filename=secure_filename(car_img.filename)
+            car_img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            #Retrieve car info from form
+            #Insert info into database
+            cur.execute('insert into "cars" ("Description","Make","Model","Color","Year","Transmission","Car Type","Price,"Photo","User ID")values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',(request.form['description'], request.form['make'],request.form['model'],request.form['colour'],request.form['year'],request.form['transmission'],request.form['car_type'],request.form['price'],filename,request.form['user_id']))
+            db.commit()
+
+            flash('New Vehicle added', 'success')
+            redirect(url_for('/api/cars'))
+    return #return render_template(' ') new car form
+"""
+##needs to be tested with frontend route
+@app.route('/api/search', methods=['GET'])
+@requires_auth
+def searchCar():
+    form=SearchForm
+    results = []
+    cardict={}
+    error=[]
+    
+    if request.method =='GET' and form.validate_on_submit():   
+        make = form.make.data
+        model = form.models.data
+
+        # To be changed to the actual db name
+        cars = Cars.query.all()  
+        for car in cars:
+            if car.make==make or car.model==model:
+                cardict={"id":car.id,"user_id":car.user_id,"year":car.year,"price":car.price, "photo": car.photo, "make": car.make,"model":car.model}
+                results.append(cardict)
+
+        if results != []:
+            return jsonify(data = results)
+        else:
+            error.append('Cars not found', 'danger')
+            return jsonify(data = error)
+
+        #results.sort()
+    error=formerrors(form)
+    return jsonify(data = error)
+
+
+        
+
+
+#needs to be tested with frontend route
+@app.route('/api/cars', methods=['POST'])
+@requires_auth
+def newcar():
+    form= AddNewCarForm()
+    error=[]
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            make=form.make.data
+            model=form.model.data
+            colour=form.colour.data
+            year=form.year.data
+            price=format(float(form.price.data), '.2f')
+            cartype=form.cartype.data
+            transmission=form.transmission.data
+            description=form.description.data
+            photo=form.photo.data
+            filename=secure_filename(photo.filename)
+            photo.save(os.path.join(app.config['UPLOADS'],filename))
+            
+            car= Cars(make=make,model=model,colour=colour,year=year,price=price,car_type=cartype,transmission=transmission,description=description, photo=filename, user_id=g.current_user["id"])
+            db.session.add(car)
+            db.session.commit()
+            
+
+            flash("Car was successfully added!", "success")
+            #return redirect(url_for('explore')) REROUT IN VUE
+            cardata = [{'make': make,'model': model,'colour': colour,'year': year,'price': price,'type': car_type,'transmission': transmission,'description': description,'photo': filename,'user_id': g.current_user["id"] }]
+            return jsonify(data=cardata)
+        error.append(flash_errors(form))
+    error.append(flash_errors(form))
+    return jsonify(data=error)
+
+
+#needs to be tested with frontend route
+@app.route('/api/users/<user_id>',methods=['GET'])
+@requires_auth
+def userDetail(user_id):
+    user_id=g.current_user["id"]
+    if request.method == 'GET':
+        user = Users.query.filter_by(id=user_id).first()
+        #results = db.session.execute('select * from car where user.user_id like :userid' , {'userid': user_id}).all()
+        if user is not None:
+            userdDetails = {'id': user.id,'username': user.username,'name': user.name,'photo': user.photo,'email': user.email,'location': user.location,'biography': user.biography,'date_joined': user.date}
+            return jsonify(userDetails = userDetails)
+        else:
+
+            return jsonify({"error": "User not Found!"})
+        
+#not sure how to handle this one
+@app.route('/api/users/<userid>/favourite', methods=["POST"])
+@requires_auth
+def addFavorite(userid):
+    userid=g.current_user["id"]
+    if request.is_json:
+        data = request.get_json(force=True)
+        faveCar = Cars(userid, data["id"], data["description"], data["make"], data["model"],
+                    data["colour"], data["year"], data["transmission"], data["car_type"], data["price"], data["photo"])
+                                
+        db.session.add(faveCar)
+        db.session.commit()
+
+        result = {"error": "null",
+                  "data": {
+                      "car":{
+                          "id": faveCar.id,
+                          "description": faveCar.description,
+                          "make": faveCar.make,
+                          "model": faveCar.model,
+                          "colour": faveCar.colour,
+                          "year": faveCar.year,
+                          "transmission": faveCar.transmission,
+                          "car_type": faveCar.car_type,
+                          "price": faveCar.price,
+                          "photo": faveCar.photo,
+
+                      }
+                  }, 
+                  "message":"Success"}
+        flash('Favorite car added successfully', 'success')
+        print ("Success")
+    else:
+        result = {"error": "true", "data": {}, "message": "Unable add car"}
+        print ("failed")
+    print ("returning")
+    return jsonify(result)
+
+#needs to be tested with frontend route
+@app.route('/api/users/<userid>/favourites', methods=["GET"])
+@requires_auth
+def userFavourite(userid):
+    """Returns JSON data for a user's wishlist"""
+    fav_car=[]
+    userid=g.current_user["id"]
+    #favorite = {"error": "null","data": {"cars":[]},"message":"Success"}
+
+    favlist = Favourites.query.filter_by(user_id=userid).all()
+    for car in favlist:
+        carid = car.car_id
+        car = Cars.query.filter_by(car_id=carid).first()
+
+        fav_car.append({'id': car.id,'description': car.description,'year': car.year,'make': car.make,'model': car.model,'colour': car.colour,'transmission': car.transmission,'type': car.car_type,'price': car.price,'photo': car.photo,'user_id': car.userid})
+
+    if fav_car != []:
+        return jsonify((data=fav_car))
+    else:
+        return jsonify({"error": "No favourites!"})
+   
+#needs to be tested with frontend route
+@app.route('/api/cars', methods=['GET'])
+@requires_auth
+def Cars():
+    card=[]
+    #if request.method =='GET':
+
+        # To be changed to the actual db name
+    cars = Cars.query.all()        
+    for car in cars:
+        card.append({'id': car.id,'description': car.description,'year': car.year,'make': car.make,'model': car.model,'colour': car.colour,'transmission': car.transmission,'type': car.car_type,'price': car.price,'photo': car.photo,'user_id': car.userid})
+        
+    if card != []:
+        return jsonify(data=card)
+    else:
+        return jsonify({"error": "No cars!"})
 
 """
 
