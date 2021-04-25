@@ -11,8 +11,9 @@
     <title>United Auto Sales</title>
 
     <!-- Bootstrap -->
-    <script>const token = "{{ csrf_token() }}";</script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    
+    <script>const token = "{{ csrf_token() }}";</script>
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">

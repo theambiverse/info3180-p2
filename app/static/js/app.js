@@ -1,4 +1,7 @@
 /* Add your Application JavaScript */
+
+
+
 const app = Vue.createApp({
   data() {
     return {
@@ -7,6 +10,7 @@ const app = Vue.createApp({
     }
   }
 });
+
 
 const login = {
     name: 'Login',
@@ -58,11 +62,12 @@ const login = {
                         localStorage.setItem('token', jwt_token);
                         localStorage.setItem('current_user', id);
                         router.push('/explore');
-  
+                        //this.$alert(jsonResponse.data.message);
                         swal({title: "Login",text: jsonResponse.data.message,icon: "success",button: "OK!"});
                     }
                 }else{
-                    swal({title: "Logged In",text: jsonResponse.errors[0],icon: "error",button: "Try Again!"});  
+                    //this.$alert(jsonResponse.data.message, " try again");
+                   swal({title: "Logged In",text: jsonResponse.errors[0],icon: "error",button: "Try Again!"});  
                 }
   
             })

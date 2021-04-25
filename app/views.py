@@ -98,8 +98,7 @@ def register():
                     user = Users.query.filter_by(username=username).first()
 
                     userdata = [{
-                        'id': user.id,'username': username,'name': name,'photo': filename,'email': email,'location': location,'biography': biography,'date_joined': date
-                    }]
+                        'id': user.id,'username': username,'name': name,'photo': filename,'email': email,'location': location,'biography': biography,'date_joined': date}]
                     return jsonify(data=userdata)
                 else:
                     error.append("Email is already taken")
@@ -121,14 +120,8 @@ def login():
             password = form.password.data
             
             user = Users.query.filter_by(username=username).first()
-
             if user is not None and check_password_hash(user.password, password):
-                payload = {
-                    'id': user.id,
-                    'username': user.username,
-                    'iat': datetime.datetime.now(datetime.timezone.utc),
-                    'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=45)
-                }
+                payload = {'id': user.id,'username': user.username,'iat': datetime.datetime.now(datetime.timezone.utc),'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=45)}
 
                 token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
 
