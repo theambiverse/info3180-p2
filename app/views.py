@@ -228,6 +228,18 @@ def newcar():
     error.append(flash_errors(form))
     return jsonify(data=error)
 
+#needs to be tested with frontend routes
+@app.route('/api/cars/<car_id>')
+@requires_auth
+def cardetails(car_id):
+    err=[]
+    car=Cars.query.filter_by(id=car_id).first()
+    if car !=[]:
+        return jsonify({'id': car.id,'description': car.description,'year': car.year,'make': car.make,'model': car.model,'colour': car.colour,'transmission': car.transmission,'type': car.car_type,'price': car.price,'photo': car.photo,'user_id': car.userid})
+    else:
+        return jsonify({'error':"Car not found!"})
+
+
 
 #needs to be tested with frontend route
 @app.route('/api/users/<user_id>',methods=['GET'])
@@ -244,6 +256,7 @@ def userDetail(user_id):
 
             return jsonify({"error": "User not Found!"})
         
+
 #needs to be tested with frontend route
 @app.route('/api/cars/<car_id>/favourite', methods=["POST"])
 @requires_auth
@@ -256,50 +269,65 @@ def addFavorite(car_id):
     result = {"id": faveCar.id,"description": faveCar.description,"make": faveCar.make,"model": faveCar.model,"colour": faveCar.colour,"year": faveCar.year,"transmission": faveCar.transmission,"car_type": faveCar.car_type,"price": faveCar.price,"photo": faveCar.photo,}
     return jsonify(result)
 
-#needs to be tested with frontend route
+
+#works with db
+#needs to be tested with frontend route 
 @app.route('/api/users/<user_id>/favourites', methods=["GET"])
-@requires_auth
+#@requires_auth
 def userFavourite(user_id):
     """Returns JSON data for a user's fav"""
     fav_car=[]
     #userid=g.current_user["id"]
     #favorite = {"error": "null","data": {"cars":[]},"message":"Success"}
 
-    favlist = Favourites.query.filter_by(user_id=user-id).all()
+    favlist = Favourites.query.filter_by(user_id=user_id).all()
     for car in favlist:
         carid = car.car_id
-        car = Cars.query.filter_by(car_id=carid).first()
+        car = Cars.query.filter_by(id=carid).first()
 
-        fav_car.append({'id': car.id,'description': car.description,'year': car.year,'make': car.make,'model': car.model,'colour': car.colour,'transmission': car.transmission,'type': car.car_type,'price': car.price,'photo': car.photo,'user_id': car.userid})
+        fav_car.append({'id': car.id,'description': car.description,'year': car.year,'make': car.make,'model': car.model,'colour': car.colour,'transmission': car.transmission,'type': car.car_type,'price': car.price,'photo': car.photo,'user_id': car.user_id})
 
     if fav_car != []:
-        return jsonify((data=fav_car))
+        return jsonify(data=fav_car)
     else:
         return jsonify({"error": "No favourites!"})
-   
+
+
+#works with db
 #needs to be tested with frontend route
 @app.route('/api/cars', methods=['GET'])
 @requires_auth
-def Cars():
+def allcars():
     card=[]
     #if request.method =='GET':
 
         # To be changed to the actual db name
     cars = Cars.query.all()        
     for car in cars:
-        card.append({'id': car.id,'description': car.description,'year': car.year,'make': car.make,'model': car.model,'colour': car.colour,'transmission': car.transmission,'type': car.car_type,'price': car.price,'photo': car.photo,'user_id': car.userid})
+        card.append({'id': car.id,'description': car.description,'year': car.year,'make': car.make,'model': car.model,'colour': car.colour,'transmission': car.transmission,'type': car.car_type,'price': car.price,'photo': car.photo,'user_id': car.user_id})
         
     if card != []:
         return jsonify(data=card)
-    else:
-        return jsonify({"error": "No cars!"})
-
-"""
-
-
+        #might need to get rid of the else
+    #else:
+        
+        #return jsonify({"error": "No cars!"}
 
 
-"""
+
+
+#to display images
+@app.route('/uploads/<filename>')
+def get_image(filename):
+ 
+    root_dir=os.getcwd()
+
+    return send_from_directory(os.path.join(root_dir, app.config['UPLOAD_FOLDER']), filename)
+
+
+
+
+
 
 ###
 # The functions below should be applicable to all Flask apps.
@@ -307,13 +335,6 @@ def Cars():
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def index(path):
-    """
-    Because we use HTML5 history mode in vue-router we need to configure our
-    web server to redirect all routes to index.html. Hence the additional route
-    "/<path:path".
-
-    Also we will render the initial webpage and then let VueJS take control.
-    """
     return render_template('index.html')
 
 
