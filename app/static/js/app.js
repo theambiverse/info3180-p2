@@ -336,13 +336,13 @@ app.component('app-header', {
   name: 'AppHeader',
   template: `
       <header>
-          <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-            <a class="navbar-brand" href="/">United Auto Sales</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-              <span class="navbar-toggler-icon"></span>
-            </button>
+          <nav class="navbar navbar-expand-lg navbar-dark fixed-top justify-content-between">
+                <a class="navbar-brand" href="/"><img src="static/images/sports-car.svg"/>United Auto Sales</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                 </button>
 
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <div class="right collapse navbar-collapse" id="navbarSupportedContent">
               <ul class="navbar-nav mr-auto">
                 <li class="nav-item active">
                 <router-link to="/register" class="nav-link">Register</router-link>
