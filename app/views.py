@@ -87,8 +87,7 @@ def register():
                 if checkemail is None:
                     
                     photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                    nuser = Users(username=username, password=password, name=name, email=email,
-                                    location=location, biography=biography, photo=filename, date_joined=date)
+                    nuser = Users(username=username, password=password, name=name, email=email,location=location, biography=biography, photo=filename, date_joined=date)
                     
                     db.session.add(nuser)
                     db.session.commit()
