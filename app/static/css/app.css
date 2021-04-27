@@ -1,11 +1,54 @@
-body {
-    padding-top: 5rem;
+:root {
+    --header-bg: #1c2c34;
+    font-size: 16px;
 }
 
-footer  {
-    padding-top: 20px;
+nav{ 
+    background-color: var(--header-bg);
 }
 
+.right{
+    flex-grow: initial;
+}
+.home-CTA{
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+} 
+
+.text-secondary{
+    font-size: 1.05rem;
+}
+
+.home-image{
+    height: 100%;
+    width: 100%;
+    user-select: none;
+}
+
+.home-image-container{
+    margin-left: 20px;
+}
+
+.intro{
+    margin-right: 20px;
+}
+.flex-area{
+    width: 100%;
+}
+
+.flex-area > button{
+    margin-right: 20px;
+    padding: 5px 45px;
+}
+
+nav > div{
+    flex-shrink: 1;
+}
+
+a>img{
+    width:10%;
+    margin-right: 15px;
+}
 
 ul{
     list-style: none;
@@ -19,9 +62,8 @@ ul{
     border-top: rgb(14, 102, 44) solid;
     box-shadow: lightslategray ;
     text-align: left;
-    
-    
 }
+
 .news__item img{
     height: 150px;
     width: 260px;
@@ -29,10 +71,8 @@ ul{
 }
 .container{
     display: flex;
-
-  align-items: flex-end;
-  flex-wrap: wrap;
-  
+    align-items: flex-end;
+    flex-wrap: wrap;
 }
 
 
