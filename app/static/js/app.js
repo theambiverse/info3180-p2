@@ -61,9 +61,9 @@ const login = {
   
                         localStorage.setItem('token', jwt_token);
                         localStorage.setItem('current_user', id);
-                        router.push('/explore');
+                        router.push('/profile');
                         //this.$alert(jsonResponse.data.message);
-                        //Yswal({title: "Login",text: jsonResponse.data.message,icon: "success",button: "OK!"});
+                        swal({title: "Login",text: jsonResponse.data.message,icon: "success",button: "OK!"});
                     }
                 }else{
                     //this.$alert(jsonResponse.data.message, " try again");
@@ -79,11 +79,13 @@ const login = {
     }
   };
   
-  const logout = {
+const logout = {
     name: 'Logout',
     template: `
-    <h1 class="mt-sm-2">Logging out...</h1>
-    `,
+    <button @click="logout" class="btn btn-success  text-white" type="button">Log out?</button>
+    `
+      ,
+   
     logout() {
         fetch("api/auth/logout", {
             method: 'POST',
@@ -96,16 +98,23 @@ const login = {
         })
         .then(function(response){
           return response.json();
+          swal({title: "Logged Out",text: jsonResponse.data.message,icon: "success",button: "OK!"});
+            router.push('/login');
         })
         .then(function(jsonResponse){
             localStorage.removeItem('token');
             localStorage.removeItem('current_user');
-            router.push('/');
+            
+            
         })
         .catch(function(error){
           console.log(error);
         });
-    }
+    },
+    methods: {
+        logout(){
+            this.$router.push({ path: '/login' });
+        }}
   };
 
   
@@ -119,6 +128,7 @@ const home = {
               <div class="flex-area ">
                   <button @click="reg" class="btn bg-primary text-white" type="button">Resister</button>
                   <button @click="login" class="btn btn-success  text-white" type="button">Login</button>
+                  
               </div>
           </div>
           <div >
@@ -130,12 +140,13 @@ const home = {
       return {}
   }, 
   methods: {
-      reg: function() {
+      reg(){
           this.$router.push({ path: '/register' });
       },
-        login: function() {
+        login() {
           this.$router.push({ path: '/login' });
       }
+    
   },
 };
 
@@ -222,7 +233,104 @@ const register = {
   }
 };
 
+const profile = {
+    name: 'Profile',
+    template: `
+        <div class="container ">
+            <div id="displayfav">
 
+                
+        
+                        <img class="favcar" id="round" src="./uploads/{{userdata.photo}}">
+      
+                        <h2 id="profile-name">{{userdata.name}}</h2>
+                        <h4 class="graytext">@<span>{{userdata.username}}</span></h4>
+                        <p class="graytext">{{userdata.biography}}</p>
+                            
+                                <p class="profile-user-info graytext">Email     {{userdata.email}}</p>
+                                <p class="profile-user-info graytext">Location     {{userdata.location}}</p>
+                                <p class="profile-user-info graytext">Joined     {{userdata.date_joined}}</p>
+                           
+                        
+                
+            </div>
+
+            <div class="carsfavtext"><h1>Cars Favourited</h1></div>
+
+               
+                    <div v-for="cars in carlist.slice(0, 3)">
+                        <div class="card" style="width: 18rem;">
+                            <img class="card-img-top favcar"  :src="./uploads/{{carlist.photo}}">
+                                <div class="name-model-price">
+                                    <div class="name-model">
+                                        <span  class="car-name">{{carlist.year.concat(" ",carlist.make)}}</span>
+                                        <span class="graytext">{{carlist.model}}</span>
+                                    </div>
+                                    <a href="#" class="btn btn-success card-price-btn">
+                                        <img class="icons" src='/static/images/tagicon.png'>
+                                        <span><span>$</span>{{carlist.price}}</span>
+                                    </a>
+                                </div>
+                                <a :href="carlist.id" class="btn btn-primary card-view-btn" @click="favcar">View more details</a>
+                        </div>
+                    </div>
+            </div>
+        </div>  
+    `, 
+    created() {
+        let self=this;
+        fetch("/api/users/"+ localStorage.getItem('current_user'), {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': token,
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                credentials: 'same-origin'        
+            })
+
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(jsonResponse) {
+                self.userdata = jsonResponse.data;})
+                
+            .catch(function(error) {
+                console.log(error);
+            });      
+            fetch("/api/users/"+ localStorage.getItem('current_user') + "/favourites", {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': token,
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                credentials: 'same-origin'        
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(jsonResponse) {
+                self.carlist = jsonResponse.data;
+            })
+            .catch(function(error) {
+                console.log(error);
+            });
+        
+    },
+    methods:{
+        favcar: function(event) {
+            event.preventDefault();
+            let carid=event.target.getAttribute("href");
+            router.push({ name: 'details', params: { id: carid}}); 
+        }
+    },
+    data() {
+        return {
+            carlist: [],
+            userdata: [],
+            host:window.location.protocol + "//" + window.location.host
+        }
+    }
+};
 
 app.component('app-header', {
   name: 'AppHeader',
@@ -241,6 +349,11 @@ app.component('app-header', {
                 </li>
                 <li class="nav-item">
                 <router-link to="/login" class="nav-link">Login</router-link>
+                </li>
+                <li class="nav-item">
+                <router-link to="/profile" class="nav-link">My Profile</router-link>
+                </li> <li class="nav-item">
+                <router-link to="/logout" class="nav-link">Logout</router-link>
                 </li>
               </ul>
             </div>
@@ -285,6 +398,7 @@ const routes = [
   { path: "/register", component: register },
   { path: "/login", component:login },
   { path: "/logout", component: logout },
+  {path: "/profile", component: profile},
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound }
 ];
 

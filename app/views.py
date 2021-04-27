@@ -122,7 +122,6 @@ def login():
             user = Users.query.filter_by(username=username).first()
             if user is not None and check_password_hash(user.password, password):
                 payload = {'id': user.id,'username': user.username,'iat': datetime.datetime.now(datetime.timezone.utc),'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=45)}
-
                 token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
 
                 return jsonify(data={'message': 'Login was successful!', 'token': token, 'id': user.id})
